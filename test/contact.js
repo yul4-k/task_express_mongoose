@@ -67,6 +67,60 @@ describe('Contacts', () => {
                     done();
                 });
         });
+
+        it('it should not POST a contact if it is already created', (done) => {
+            let contact = {
+                firstName: "TestFirstName",
+                lastName: "TestLastName",
+                phoneNumber: '4444'
+            }
+
+            chai.request(server)
+                .post('/api/contact')
+                .send(contact)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    chai.request(server)
+                        .post('/api/contact')
+                        .send(contact)
+                        .end((err, res) => {
+                            res.should.have.status(409);
+                            res.body.should.be.a('object');
+                            res.body.should.have.property('errorCode').eql('cannot_create_contact');
+                            res.body.should.have.property('reasonCode').eql('already_exists');
+                            done();
+                        });
+                });
+        });
+
+        it('it should  POST a contact if it was already deleted', (done) => {
+            let contact = new ContactModel({
+                firstName: "TestFirstName",
+                lastName: "TestLastName",
+                phoneNumber: '7777'
+            });
+            contact.save((err, contact) => {
+                chai.request(server)
+                    .delete('/api/contact/' + contact._id)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+
+                        chai.request(server)
+                            .post('/api/contact')
+                            .send(contact)
+                            .end((err, res) => {
+                                res.should.have.status(200);
+                                res.body.should.be.a('object');
+                                res.body.should.have.property('message').eql('success');
+                                res.body.data.should.have.property('firstName');
+                                res.body.data.should.have.property('lastName');
+                                res.body.data.should.have.property('phoneNumber');
+                                res.body.data.should.have.property('isExpired');
+                                done();
+                            });
+                    });
+            });
+        });
     });
 
     describe('/GET /api/contact/:id contact by id', () => {

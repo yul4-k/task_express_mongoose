@@ -53,6 +53,7 @@ function postContact(req, res) {
                 var newContact = new ContactModel(req.body);
                 newContact.save(function (err, contact) {
                     if (err) {
+                        //to do: handle model validation error -> fix status to 400 & message,
                         res.status(500).send(err);
                     }
                     else {
@@ -68,8 +69,10 @@ function postContact(req, res) {
                 });
             } else {
                 res.status(409).send({
+                    status: 409,
                     errorCode: 'cannot_create_contact',
-                    reasonCode: 'already_exists'
+                    reasonCode: 'already_exists',
+                    message: 'Cannot create new contast. The contact already exists.'
                 })
             }            
         });   

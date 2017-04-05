@@ -47,7 +47,6 @@ describe('/POST /api/history', () => {
                     res.body.data.should.have.property('phoneNumber');
                     res.body.data.should.have.property('eventTime');
                     res.body.data.should.have.property('duration');
-                    console.dir(res.body.data)
                     done();
                 });
         });

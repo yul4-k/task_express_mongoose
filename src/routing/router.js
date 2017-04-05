@@ -4,7 +4,7 @@ var phoneCallsRoutes = require('./phoneCalls');
 
 var router = express.Router();
 
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     console.log('Something is happening.');
     next();
 });
@@ -20,8 +20,8 @@ router.route('/contact/:id')
     .put(contactRoutes.updateContact)
     .delete(contactRoutes.deleteContact);
 
-router.get('/', function(req, res) {
-    res.json({ message: 'hello' });   
+router.get('/', function (req, res) {
+    res.json({ message: 'hello' });
 });
 
 router.route('/history')

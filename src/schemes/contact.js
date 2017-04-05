@@ -19,7 +19,8 @@ var contactSchema = {
     type: String,
     required: [true, constants.FIELD_IS_REQUIRED],
     match: /^[0-9]*$/i
-  }
+  },
+  modificationDate: Date
 };
 
 module.exports = new Schema(contactSchema);
