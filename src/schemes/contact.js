@@ -1,7 +1,7 @@
-var mongoose = require('mongoose');
-var constants = require('../constants/constants')
+const mongoose = require('mongoose');
+const constants = require('../constants/constants')
 
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 var contactSchema = {
   firstName: {

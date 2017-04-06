@@ -15,7 +15,7 @@ describe('Contacts', () => {
         });
     });
 
-    describe('/GET contacts', () => {
+    describe('/GET /api/contacts', () => {
         it('it should GET all the contacts', (done) => {
             chai.request(server)
                 .get('/api/contacts?page=0&limit=5')
@@ -38,7 +38,7 @@ describe('Contacts', () => {
                 .post('/api/contact')
                 .send(contact)
                 .end((err, res) => {
-                    res.should.have.status(500);
+                    res.should.have.status(400);
                     res.body.should.be.a('object');
                     res.body.should.have.property('errors');
                     res.body.errors.should.have.property('phoneNumber');

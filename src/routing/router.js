@@ -1,13 +1,8 @@
-var express = require('express');
-var contactRoutes = require('./contacts');
-var phoneCallsRoutes = require('./phoneCalls');
+const express = require('express');
+const contactRoutes = require('./contacts');
+const phoneCallsRoutes = require('./phoneCalls');
 
-var router = express.Router();
-
-router.use(function (req, res, next) {
-    console.log('Something is happening.');
-    next();
-});
+const router = express.Router();
 
 router.route('/contacts')
     .get(contactRoutes.getContacts);
@@ -20,7 +15,7 @@ router.route('/contact/:id')
     .put(contactRoutes.updateContact)
     .delete(contactRoutes.deleteContact);
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.json({ message: 'hello' });
 });
 

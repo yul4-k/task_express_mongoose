@@ -1,10 +1,20 @@
-var ContactModel = require('../models/contact');
-var mongoose = require('mongoose');
+const ContactModel = require('../models/contact');
+
+const handleValidationErrors = (err, res, errorCode) => {
+    err.name && 'ValidationError' === err.name ?
+        res.status(400).send({
+            status: 400,
+            errorCode: errorCode,
+            reasonCode: err.name,
+            errors: err.errors
+        }) :
+        res.status(500).send(err);
+}
 
 /*
  * GET /api/contacts?page=1&limit=2 route to retrieve all the contacts.
  */
-function getContacts(req, res) {
+const getContacts = (req, res) => {
     var query = req.query;
     var limitParam = query.limit;
     var pageParam = query.page;
@@ -17,97 +27,98 @@ function getContacts(req, res) {
         .sort({ firstName: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .exec(function (err, contacts) {
-            if (err) res.send(err);
-            ContactModel.find({ isExpired: false }).count().exec(function (err, count) {
-                if (err) res.send(err);
-                const data = {
-                    "total": count,
-                    "data": contacts,
-                    "page": page,
-                    "limit": limit
-                }
-                res.json(data);
-            });
-        });
+        .lean()
+        .exec()
+        .then(contacts => {
+            ContactModel.find({ isExpired: false }).count().exec()
+                .then(count => {
+                    const data = {
+                        "total": count,
+                        "data": contacts,
+                        "page": page,
+                        "limit": limit
+                    };
+                    res.json(data);
+                })
+                .catch(err => res.send(err));
+        })
+        .catch(err => res.send(err));
 }
 
 
 /*
  * POST /api/contact to save a new contact.
  */
-function postContact(req, res) {
-    /*
-     * 1. find contact with the same phoneNumber
-     *      if isExpired === false - error -already exists
-     *      if isExpired === true - update record and set to false
-     * if not exists - create new
-     * 
-     */
+const postContact = (req, res) => {
+    const { body: { phoneNumber } } = req;
 
     ContactModel
-        .findOne({ phoneNumber: req.body.phoneNumber }, function (err, contact) {
-            if (err) {
-                res.status(500).send(err);
-            } else if (contact === null) {
-                var newContact = new ContactModel(req.body);
-                newContact.save(function (err, contact) {
-                    if (err) {
-                        //to do: handle model validation error -> fix status to 400 & message,
-                        res.status(500).send(err);
-                    }
-                    else {
-                        res.json({ message: "success", data: contact });
-                    }
-                });
-            } else if (contact.isExpired) {
-                var requestBody = req.body;
-                requestBody.isExpired = false;
-                ContactModel.findOneAndUpdate({ phoneNumber: req.body.phoneNumber, isExpired: true }, requestBody, { new: true }, function (err, contact) {
-                    if (err) res.status(500).send(err);
-                    res.json({ message: 'success', data: contact });
-                });
-            } else {
+        .findOne({ phoneNumber })
+        .then(contact => {
+            if (contact === null) {
+                return ContactModel.create(req.body)
+                    .then(contact =>
+                        res.json({ message: "success", data: contact }))
+                    .catch(err =>
+                        handleValidationErrors(err, res, "cannot_create_contact"));
+            }
+
+            if (contact && contact.isExpired) {
+                const requestBody = req.body;
+
+                const newContactData = Object.assign({}, requestBody, { isExpired: false });
+                return ContactModel.findOneAndUpdate({ phoneNumber, isExpired: true }, newContactData, { new: true })
+                    .then(contact => res.json({ message: 'success', data: contact }))
+                    .catch(err => handleValidationErrors(err, res, "cannot_create_contact"));
+            }
+
+            if (contact && !contact.isExpired) {
                 res.status(409).send({
                     status: 409,
                     errorCode: 'cannot_create_contact',
                     reasonCode: 'already_exists',
                     message: 'Cannot create new contast. The contact already exists.'
                 })
-            }            
-        });   
+            }
+        })
+        .catch(err => res.status(500).send(err));
 }
 
 /*
  * GET /api/contact/:id route to retrieve a contact by id.
  */
-function getContact(req, res) {
-    ContactModel.find({ isExpired: false, _id: req.params.id }, function (err, contact) {
-        if (err) res.send(err);
-        res.json(contact);
-    });
+const getContact = (req, res) => {
+    ContactModel.find({ isExpired: false, _id: req.params.id })
+        .lean() //to get plain js Object
+        .then(contact => res.json(contact))
+        .catch(err => res.send(err));
 }
 
 /*
  * PUT /api/contact/:id to update a contact given its id
  */
-function updateContact(req, res) {
-    var requestBody = req.body
+const updateContact = (req, res) => {
+    const { body, params } = req;
 
-    ContactModel.findOneAndUpdate({ _id: req.params.id, isExpired: false }, requestBody, { new: true }, function (err, contact) {
-        if (err) res.send(err);
-        res.json({ message: 'success', data: contact });
-    });
+    ContactModel.findOneAndUpdate({ _id: params.id, isExpired: false }, body, { new: true })
+        .then(contact =>
+            res.json({ message: 'success', data: contact }))
+        .catch(err =>
+            res.send(err)
+        );
 }
 
 /*
  * DELETE /api/contact/:id to delete a contact by setting isExpired - true.
  */
-function deleteContact(req, res) {
-    ContactModel.findOneAndUpdate({ _id: req.params.id, isExpired: false }, { isExpired: true }, { new: true }, function (err, contact) {
-        if (err) res.send(err);
-        res.json({ message: 'success', data: contact });
-    });
+const deleteContact = (req, res) => {
+    const { params: { id } } = req;
+    ContactModel.findOneAndUpdate({ _id: id, isExpired: false }, { isExpired: true }, { new: true })
+        .then(contact =>
+            res.json({ message: 'success', data: contact }))
+        .catch(err => {
+            res.send(err)
+        });
 }
 
 module.exports = { getContacts, postContact, getContact, updateContact, deleteContact };

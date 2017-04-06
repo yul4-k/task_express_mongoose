@@ -1,10 +1,9 @@
-var mongoose = require('mongoose');
-var constants = require('../constants/constants');
-var Contact = require('./contact');
+const mongoose = require('mongoose');
+const constants = require('../constants/constants');
 
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-var phoneCallSchema = {
+const phoneCallSchema = {
   phoneNumber: {
     type: String,
     required: [true, constants.FIELD_IS_REQUIRED],

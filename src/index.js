@@ -1,6 +1,5 @@
 const app = require('./app');
+const logger = require("./utils/logger");
 
-var port = process.env.PORT || 8181;
-app.listen(port, function () {
-    console.log('Example app listening on port: ', port)
-});
+const port = process.env.PORT || 8181;
+app.listen(port, () => logger.log('Example app listening on port: ', port));
