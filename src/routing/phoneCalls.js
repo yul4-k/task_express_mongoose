@@ -1,9 +1,15 @@
 var ContactModel = require('../models/contact');
 var PhoneCallModel = require('../models/phoneCall');
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'); // не используемая зависимость
+
+
+
+// Mongoose возвращает promise
+// поэтому callback использовать не стоит
 
 function createPhoneCall(res, phoneData, contact) {
-    phoneData.contact_id = contact._id
+    phoneData.contact_id = contact._id // не забывай про ";"
+    // лучше использовать http://mongoosejs.com/docs/api.html#model_Model.create
     var newPhoneCall = new PhoneCallModel(phoneData);
     newPhoneCall.save(function (err, phoneCall) {
         if (err) {
@@ -15,6 +21,10 @@ function createPhoneCall(res, phoneData, contact) {
     });
 }
 
+// для комментариев лучще использовать jsdoc
+// http://apidocjs.com/
+
+
 /*
  * GET /api/history?page=1&limit=2 route to retrieve all the phone calls per page.
  */
@@ -24,7 +34,7 @@ function getPhoneCalls(req, res) {
     var pageParam = query.page;
     var limit = !isNaN(limitParam) && limitParam > 0 ? limitParam * 1 : 10;
     var page = !isNaN(pageParam) && pageParam > 0 ? pageParam * 1 : 1;
-    var skip = (page - 1) * limit
+    var skip = (page - 1) * limit // не забывай про ";"
 
     PhoneCallModel
         .find({})
@@ -41,7 +51,7 @@ function getPhoneCalls(req, res) {
                     "data": phoneCalls,
                     "page": page,
                     "limit": limit
-                }
+                }  // не забывай про ";"
                 res.json(data);
             });
         });
@@ -67,6 +77,7 @@ function postPhoneCalls(req, res) {
                 res.send(err);
             } else if (contact === null) {
                 //create new contact
+                // лучше использовать http://mongoosejs.com/docs/api.html#model_Model.create
                 var newContact = new ContactModel({
                     phoneNumber: req.body.phoneNumber,
                     firstName: null,

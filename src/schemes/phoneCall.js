@@ -1,4 +1,4 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'); // лучше использовать модуль ./mongoose
 var constants = require('../constants/constants');
 var Contact = require('./contact');
 

@@ -1,4 +1,4 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'); // лучше использовать модуль ./mongoose
 var constants = require('../constants/constants')
 
 var Schema = mongoose.Schema;
@@ -13,7 +13,7 @@ var contactSchema = {
   },
   isExpired: {
     type: Boolean,
-    default: false
+    default: false // лучще default взять в ковычки
   },
   phoneNumber: {
     type: String,

@@ -1,5 +1,9 @@
 var ContactModel = require('../models/contact');
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'); // не используемая зависимость
+
+// для комментариев лучще использовать jsdoc
+// http://apidocjs.com/
+
 
 /*
  * GET /api/contacts?page=1&limit=2 route to retrieve all the contacts.
@@ -12,6 +16,8 @@ function getContacts(req, res) {
     var page = !isNaN(pageParam) && pageParam > 0 ? pageParam * 1 : 1;
     var skip = (page - 1) * limit
 
+    // Mongoose возвращает promise
+    // поэтому callback использовать не стоит
     ContactModel
         .find({ isExpired: false })
         .sort({ firstName: 1 })
@@ -26,7 +32,7 @@ function getContacts(req, res) {
                     "data": contacts,
                     "page": page,
                     "limit": limit
-                }
+                } // не забывай ";"
                 res.json(data);
             });
         });
@@ -47,9 +53,32 @@ function postContact(req, res) {
 
     ContactModel
         .findOne({ phoneNumber: req.body.phoneNumber }, function (err, contact) {
+            // почему бы не использовать такой подход
+            // if (err) {
+            //     res.status(500).send(err);
+            //     return;
+            // }
+            //
+            // if (contact === null) {
+            //     var newContact = new ContactModel(req.body);
+            //     newContact.save(function (err, contact) {
+            //         if (err) {
+            //             //to do: handle model validation error -> fix status to 400 & message,
+            //             res.status(500).send(err);
+            //         }
+            //         else {
+            //             res.json({ message: "success", data: contact });
+            //         }
+            //     });
+            //     return;
+            // }
+            // and etc, it's make code more easy to read
+
             if (err) {
                 res.status(500).send(err);
             } else if (contact === null) {
+                // instead of new Model()
+                // better to use http://mongoosejs.com/docs/api.html#model_Model.create
                 var newContact = new ContactModel(req.body);
                 newContact.save(function (err, contact) {
                     if (err) {
@@ -82,6 +111,10 @@ function postContact(req, res) {
  * GET /api/contact/:id route to retrieve a contact by id.
  */
 function getContact(req, res) {
+    // Лучще использовать метод lean (http://mongoosejs.com/docs/api.html#query_Query-lean)
+    // что бы получать объекты а не модели
+    // всегда стоит использовать findOneAndUpdate, т.к. может возникнуть ситуция что перед .save()
+    // кто-то другой удалит document из базы
     ContactModel.find({ isExpired: false, _id: req.params.id }, function (err, contact) {
         if (err) res.send(err);
         res.json(contact);
@@ -92,7 +125,7 @@ function getContact(req, res) {
  * PUT /api/contact/:id to update a contact given its id
  */
 function updateContact(req, res) {
-    var requestBody = req.body
+    var requestBody = req.body // Не забывай про ";"
 
     ContactModel.findOneAndUpdate({ _id: req.params.id, isExpired: false }, requestBody, { new: true }, function (err, contact) {
         if (err) res.send(err);
